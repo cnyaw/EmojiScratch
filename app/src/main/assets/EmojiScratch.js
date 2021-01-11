@@ -20,6 +20,7 @@ var ctx1 = c1.getContext("2d");
 
 var elScore = document.getElementById("score");
 var score = 0;
+var quiz_prob_index, cur_cat_index, cur_quiz_index;
 
 var elLife = document.getElementById("life");
 var life = 3;
@@ -173,6 +174,14 @@ function gameOver() {
   document.getElementById("endscore").innerHTML = score;
 }
 
+function getCatQuizProb(cat_quiz_data) {
+  var n = 0;
+  for (var i = 0; i < cat_quiz_data.length; i++) {
+    n += cat_quiz_data[i][quiz_prob_index];
+  }
+  return n;
+}
+
 function hide(el) {
   el.style.display = "none";
 }
@@ -180,6 +189,16 @@ function hide(el) {
 function hidePrompt() {
   fillForeground();
   updateCanvas();
+}
+
+function initProb() {
+  quiz_prob_index = quiz_data[0][0].length;
+  for (var i = 0; i < quiz_data.length; i++) {
+    var q = quiz_data[i];
+    for (var j = 0; j < q.length; j++) {
+      q[j][quiz_prob_index] = 1;
+    }
+  }
 }
 
 function isTitle() {
@@ -192,17 +211,17 @@ function newQuiz() {
     gameOver();
     return;
   }
-  var cat_index = curr_cat;
-  if (quiz_data.length == cat_index) {
-    cat_index = randQuizCat();
+  cur_cat_index = curr_cat;
+  if (quiz_data.length == cur_cat_index) {
+    cur_cat_index = randQuizCat();
   }
-  var cat_quiz_data = quiz_data[cat_index];
-  var quiz_index = Math.floor(Math.random() * cat_quiz_data.length);
-  setButtonsName(cat_quiz_data, quiz_index);
+  var cat_quiz_data = quiz_data[cur_cat_index];
+  cur_quiz_index = randQuizIndex(cat_quiz_data);
+  setButtonsName(cat_quiz_data, cur_quiz_index);
   setButtonsHandler();
-  createQuizImage(cat_quiz_data, quiz_index);
+  createQuizImage(cat_quiz_data, cur_quiz_index);
   answer_index = Math.floor(Math.random() * 4);
-  var q = cat_quiz_data[quiz_index];
+  var q = cat_quiz_data[cur_quiz_index];
   btn[answer_index].innerHTML = q[1];
   new_game = true;
 }
@@ -224,12 +243,25 @@ function onClickButton(i) {
 function randQuizCat() {
   var n = 0;
   for (var i = 0; i < quiz_data.length; i++) {
-    n += quiz_data[i].length;
+    n += getCatQuizProb(quiz_data[i]);
   }
   var r = Math.floor(Math.random() * n);
   n = 0;
   for (var i = 0; i < quiz_data.length; i++) {
-    n += quiz_data[i].length;
+    n += getCatQuizProb(quiz_data[i]);
+    if (n >= r) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+function randQuizIndex(cat_quiz_data) {
+  var n = getCatQuizProb(cat_quiz_data);
+  var r = Math.floor(Math.random() * n);
+  n = 0;
+  for (var i = 0; i < cat_quiz_data.length; i++) {
+    n += cat_quiz_data[i][quiz_prob_index];
     if (n >= r) {
       return i;
     }
@@ -247,6 +279,8 @@ function rightAnswer() {
   drawAnswer("✔️");
   score += calcScore();
   updateScore();
+  var p = quiz_data[cur_cat_index][cur_quiz_index][quiz_prob_index] / 2;
+  quiz_data[cur_cat_index][cur_quiz_index][quiz_prob_index] = Math.max(1, Math.floor(p));
 }
 
 function setButtonsHandler() {
@@ -332,6 +366,9 @@ function wrongAnswer() {
   drawAnswer("❌");
   life -= 1;
   updateLife();
+  var p = quiz_data[cur_cat_index][cur_quiz_index][quiz_prob_index] * 2;
+  quiz_data[cur_cat_index][cur_quiz_index][quiz_prob_index] = Math.min(64, p);
 }
 
+initProb();
 genTitle();
