@@ -78,6 +78,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         WebView wv = findViewById(R.id.webView);
         wv.getSettings().setJavaScriptEnabled(true);
+        wv.getSettings().setLoadWithOverviewMode(true);
+        wv.getSettings().setUseWideViewPort(true);
         wv.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
