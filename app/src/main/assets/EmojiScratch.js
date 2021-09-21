@@ -196,7 +196,7 @@ function initProb() {
   for (var i = 0; i < quiz_data.length; i++) {
     var q = quiz_data[i];
     for (var j = 0; j < q.length; j++) {
-      q[j][quiz_prob_index] = 1;
+      q[j][quiz_prob_index] = supportsEmoji(q[j][0]) ? 1 : 0;
     }
   }
 }
@@ -316,6 +316,13 @@ function startGame(i) {
   newQuiz();
   hide(viewTitle);
   show(viewGame);
+}
+
+function supportsEmoji(ch) {
+  const ctx = document.createElement("canvas").getContext("2d");
+  ctx.canvas.width = ctx.canvas.height = 1;
+  ctx.fillText(ch, -4, 4);
+  return ctx.getImageData(0, 0, 1, 1).data[3] > 0; // Not a transparent pixel.
 }
 
 function trySpeak(s) {
